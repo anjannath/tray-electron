@@ -189,6 +189,8 @@ createTrayMenu = function(state) {
 app.whenReady().then(() => {
   // parent window to prevent app closing
   parentWindow = new BrowserWindow({ show: false })
+  // need to load something for spectron to detect app is launched
+  parentWindow.loadFile("about.html") 
 
   // Setup tray
   tray = new Tray(path.join(app.getAppPath(), 'assets', 'ocp-logo.png'))
