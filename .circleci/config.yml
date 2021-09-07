@@ -1,0 +1,16 @@
+version: '2.1'
+orbs:
+  node: circleci/node@4.7.0
+jobs:
+  run-tests:
+    docker:
+      - image: 'cimg/node:14.17.6-browsers'
+    steps:
+      - checkout
+      - run: node --version
+      - run: npm install
+      - run: npm run test
+workflows:
+  test_tray_app:
+    jobs:
+      - run-tests
