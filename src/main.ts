@@ -258,7 +258,8 @@ const appStart = async function() {
     frame: false,
     titleBarStyle: 'hidden',
     webPreferences: {
-      preload: path.join(__dirname, "preload-main.js")
+      preload: path.join(__dirname, "preload-main.js"),
+      enablePreferredSizeMode: true
     }
   })
   miniStatusWindow.setMenuBarVisibility(false)
