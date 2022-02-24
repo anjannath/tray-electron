@@ -521,6 +521,16 @@ const isRunning = function(state: string): boolean {
   return state === "running";
 }
 
+const isStopped = function(state: string): boolean {
+  state = state.toLowerCase();
+  return state === "stopped" || state === "unknown";
+}
+
+const isBusy = function(state: string): boolean {
+  state = state.toLowerCase();
+  return state === "starting" || state === "stopping";
+}
+
 const quitApp = () => {
   miniStatusWindow?.destroy()
   logsWindow?.destroy();
@@ -542,6 +552,22 @@ interface State {
   readonly DiskUse?: number;
   readonly DiskSize?: number;
 }
+
+
+const onToggleInstanceState = function(state: string) {
+  if (isRunning(state)) {
+    console.log("stop")
+    stopInstance();
+  } 
+  if (isStopped(state)) {
+    startInstance();
+  }
+}
+
+const onInstanceDelete = function() {
+  deleteInstance();
+}
+
 const createTrayMenu = function(status: State) {
   var state = status.CrcStatus;
   var preset = status.Preset;
@@ -589,11 +615,30 @@ const createTrayMenu = function(status: State) {
   // TODO: tray should exist
   const {x, y} = (tray as any).getBounds();
 
+  var labelAction = ""
+  if (isRunning(state)) {
+    labelAction = "  Stop"
+  }
+  if (isStopped(state)) {
+    labelAction = "  Start"
+  }
+  if (isBusy(state)) {
+    labelAction = "  Stop"
+  } 
+
   let menuTemplate: Electron.MenuItemConstructorOptions[] = [
     {
       label: state,
       click(mi, bw, event) { showMiniStatusWindow(event, {x: x, y: y}); },
       icon: path.join(app.getAppPath(), 'assets', `status-${mapStateForImage(state)}.png`),
+    },
+    {
+      label: labelAction,
+      click() { onToggleInstanceState(state); },
+    },
+    {
+      label: "  Delete",
+      click() { onInstanceDelete(); },
     },
     {
       label: '  Open logs',
@@ -732,7 +777,7 @@ ipcMain.once('close-setup-wizard', () => {
 // VM interaction
 // ------------------------------------------------------------------------- */
 
-ipcMain.on('start-instance', async (event, args) => {
+const startInstance = async function() {
   if(await isPullsecretMissing()) {
     /*
     showNotification({
@@ -756,9 +801,13 @@ ipcMain.on('start-instance', async (event, args) => {
   catch(e) {
     console.log("Action error: " + e)
   }
+}
+
+ipcMain.on('start-instance', async (event, args) => {
+  startInstance();
 });
 
-ipcMain.on('stop-instance', async (event, args) => {
+const stopInstance = function() {
   try {
     commander.stop();
     /*
@@ -770,9 +819,13 @@ ipcMain.on('stop-instance', async (event, args) => {
   catch(e) {
     console.log("Action error: " + e)
   }
+}
+
+ipcMain.on('stop-instance', async (event, args) => {
+  stopInstance();
 });
 
-ipcMain.on('delete-instance', async (event, args) => {
+const deleteInstance = function() {
   try {
     commander.delete();
     /*
@@ -784,6 +837,10 @@ ipcMain.on('delete-instance', async (event, args) => {
   catch(e) {
     console.log("Action error: " + e)
   }
+}
+
+ipcMain.on('delete-instance', async (event, args) => {
+  deleteInstance();
 });
 
 
